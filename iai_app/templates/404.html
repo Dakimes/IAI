@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="not-found">
+  <h1>404</h1>
+  <p>Компания не найдена или ещё не оценена.</p>
+  <a href="{{ url_for('index') }}" class="btn">На главную</a>
+</section>
+{% endblock %}
