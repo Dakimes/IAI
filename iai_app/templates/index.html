@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="hero">
+  <h1>Оцените компанию по индексу IAI</h1>
+  <p>Введите название компании, чтобы запустить автоматический анализ и получить радар по шести субиндексам.</p>
+  <form id="searchForm" class="search-form">
+    <input type="text" id="companyInput" placeholder="Введите название компании" required>
+    <button type="submit">Оценить</button>
+  </form>
+</section>
+
+<section class="table-wrapper">
+  <h2>Рейтинг компаний</h2>
+  <table class="rating-table">
+    <thead>
+      <tr><th>Компания</th><th>IAI</th></tr>
+    </thead>
+    <tbody>
+    {% for company in companies %}
+      <tr>
+        <td><a href="{{ url_for('company', slug=company['slug']) }}">{{ company['name'] }}</a></td>
+        <td>{{ '%.1f'|format(company['iai']) }}</td>
+      </tr>
+    {% else %}
+      <tr><td colspan="2">Пока нет оценённых компаний.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<div id="pipelineModal" class="modal hidden">
+  <div class="modal-content">
+    <h3>Оцениваем компанию…</h3>
+    <ul class="pipeline-steps">
+      <li class="active">Шаг 1/4 — Ищем публичную информацию…</li>
+      <li>Шаг 2/4 — Анализируем данные и субиндексы…</li>
+      <li>Шаг 3/4 — Считаем итоговый индекс IAI…</li>
+      <li>Шаг 4/4 — Сохраняем результат…</li>
+    </ul>
+    <p class="hint">Это может занять до 30 секунд. Окно закроется автоматически.</p>
+  </div>
+</div>
+{% endblock %}
