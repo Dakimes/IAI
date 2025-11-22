@@ -2,14 +2,19 @@
 {% block content %}
 <section class="hero">
   <h1>Оцените компанию по индексу IAI</h1>
-  <p>Введите название компании, чтобы запустить автоматический анализ и получить радар по шести субиндексам.</p>
+  <p>Быстрый анализ финансов, рынка, технологии, команды, рисков и исполнения с автоматическим сбором фактов.</p>
   <form id="searchForm" class="search-form">
     <input type="text" id="companyInput" placeholder="Введите название компании" required>
     <button type="submit">Оценить</button>
   </form>
+  <div class="meta-grid">
+    <div class="meta-chip">6 субиндексов</div>
+    <div class="meta-chip">Веса: 30/25/20/15/10/5</div>
+    <div class="meta-chip">Радар + факты</div>
+  </div>
 </section>
 
-<section class="table-wrapper">
+<section class="panel">
   <h2>Рейтинг компаний</h2>
   <table class="rating-table">
     <thead>
@@ -19,7 +24,7 @@
     {% for company in companies %}
       <tr>
         <td><a href="{{ url_for('company', slug=company['slug']) }}">{{ company['name'] }}</a></td>
-        <td>{{ '%.1f'|format(company['iai']) }}</td>
+        <td><span class="pill-score">{{ '%.1f'|format(company['iai']) }} / 10</span></td>
       </tr>
     {% else %}
       <tr><td colspan="2">Пока нет оценённых компаний.</td></tr>
