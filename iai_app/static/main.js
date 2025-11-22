@@ -76,7 +76,7 @@ function initRadar() {
     circle.setAttribute('cy', center);
     circle.setAttribute('r', r);
     circle.setAttribute('fill', 'none');
-    circle.setAttribute('stroke', '#e5e7eb');
+    circle.setAttribute('stroke', '#d8e2ff');
     svg.appendChild(circle);
   }
 
@@ -88,7 +88,7 @@ function initRadar() {
     line.setAttribute('y1', center);
     line.setAttribute('x2', center + radius * Math.cos(angle));
     line.setAttribute('y2', center + radius * Math.sin(angle));
-    line.setAttribute('stroke', '#cbd5e1');
+    line.setAttribute('stroke', '#c3d2ff');
     svg.appendChild(line);
 
     const label = document.createElementNS(ns, 'text');
@@ -97,6 +97,7 @@ function initRadar() {
     label.setAttribute('text-anchor', 'middle');
     label.setAttribute('alignment-baseline', 'middle');
     label.setAttribute('font-size', '12');
+    label.setAttribute('fill', '#0b1f3a');
     label.textContent = axis;
     svg.appendChild(label);
 
@@ -109,8 +110,8 @@ function initRadar() {
 
   const polygon = document.createElementNS(ns, 'polygon');
   polygon.setAttribute('points', points.map(p => p.join(',')).join(' '));
-  polygon.setAttribute('fill', 'rgba(31,111,235,0.35)');
-  polygon.setAttribute('stroke', '#1f6feb');
+  polygon.setAttribute('fill', 'rgba(12,70,255,0.28)');
+  polygon.setAttribute('stroke', '#0c46ff');
   polygon.setAttribute('stroke-width', '2');
   svg.appendChild(polygon);
 }
