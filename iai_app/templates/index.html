@@ -33,22 +33,50 @@
   </table>
 </section>
 
-<div id="pipelineModal" class="modal hidden" role="dialog" aria-modal="true">
-  <div class="modal-content pipeline">
-    <div class="spinner">
-      <div class="ring"></div>
-      <div class="center">IAI</div>
-    </div>
-    <div class="steps">
-      <p class="eyebrow">Пайплайн оценки</p>
-      <ol class="step-list">
-        <li class="step active">Глубокий поиск и сбор источников</li>
-        <li class="step">Оценка каждого субиндекса по методологии</li>
-        <li class="step">Взвешивание и расчёт итогового индекса</li>
-        <li class="step">Формирование карточки компании</li>
-      </ol>
-      <p class="hint">Пожалуйста, подождите — процесс может занять до 30 секунд.</p>
+  <div id="pipelineModal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-content pipeline">
+      <div class="spinner">
+        <div class="ring"></div>
+        <div class="center">IAI</div>
+      </div>
+      <div class="steps">
+        <p class="eyebrow">Пайплайн оценки</p>
+        <ol class="step-list">
+          <li class="step" data-step="search">
+            <span class="step-icon pixel-icon pixel-search" aria-hidden="true"></span>
+            <div class="step-copy">
+              <div class="step-title">Глубокий поиск и сбор источников</div>
+              <div class="step-sub">web-search, проверка ссылок и фактов</div>
+            </div>
+            <span class="step-dot" aria-hidden="true"></span>
+          </li>
+          <li class="step" data-step="scoring">
+            <span class="step-icon pixel-icon pixel-scan" aria-hidden="true"></span>
+            <div class="step-copy">
+              <div class="step-title">Оценка субиндексов по методологии</div>
+              <div class="step-sub">FSI · MPI · PTI · TMI · RRI · PI</div>
+            </div>
+            <span class="step-dot" aria-hidden="true"></span>
+          </li>
+          <li class="step" data-step="aggregation">
+            <span class="step-icon pixel-icon pixel-aggregate" aria-hidden="true"></span>
+            <div class="step-copy">
+              <div class="step-title">Взвешивание и расчёт итогового индекса</div>
+              <div class="step-sub">веса IAI и проверка согласованности</div>
+            </div>
+            <span class="step-dot" aria-hidden="true"></span>
+          </li>
+          <li class="step" data-step="card">
+            <span class="step-icon pixel-icon pixel-card" aria-hidden="true"></span>
+            <div class="step-copy">
+              <div class="step-title">Формирование карточки компании</div>
+              <div class="step-sub">структура фактов, ссылки и теги</div>
+            </div>
+            <span class="step-dot" aria-hidden="true"></span>
+          </li>
+        </ol>
+        <p class="hint pipeline-status">Пожалуйста, подождите — процесс может занять до 30 секунд.</p>
+      </div>
     </div>
   </div>
-</div>
 {% endblock %}
