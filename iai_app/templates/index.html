@@ -4,17 +4,12 @@
   <div>
     <p class="eyebrow">IAI</p>
     <h1>Оценка компании</h1>
-    <p class="lede">Введите название — мы соберём факты, посчитаем субиндексы и покажем итоговый IAI.</p>
+    <p class="lede">Введите название компании — мы подготовим аналитическую карточку с фактами и итоговым индексом.</p>
   </div>
   <form id="searchForm" class="search-form">
     <input type="text" id="companyInput" placeholder="Например: ООО «ИРМ»" required>
     <button type="submit">Оценить</button>
   </form>
-  <div class="meta-grid">
-    <div class="meta-chip">6 субиндексов</div>
-    <div class="meta-chip">Веса: 30/25/20/15/10/5</div>
-    <div class="meta-chip">Радар + факты</div>
-  </div>
 </section>
 
 <section class="panel rating-panel">
@@ -46,13 +41,13 @@
     </div>
     <div class="steps">
       <p class="eyebrow">Пайплайн оценки</p>
-      <div class="road">
-        <div class="node active" data-text="Собираем факты (глубокий поиск)"></div>
-        <div class="node" data-text="Считаем субиндексы по методологии"></div>
-        <div class="node" data-text="Взвешиваем и строим радар"></div>
-        <div class="node" data-text="Сохраняем результат"></div>
-      </div>
-      <p class="hint">Пожалуйста, подождите — процесс занимает до 30 секунд.</p>
+      <ol class="step-list">
+        <li class="step active">Глубокий поиск и сбор источников</li>
+        <li class="step">Оценка каждого субиндекса по методологии</li>
+        <li class="step">Взвешивание и расчёт итогового индекса</li>
+        <li class="step">Формирование карточки компании</li>
+      </ol>
+      <p class="hint">Пожалуйста, подождите — процесс может занять до 30 секунд.</p>
     </div>
   </div>
 </div>
