@@ -1,9 +1,18 @@
 import json
-import os
 from flask import Flask, render_template, request, jsonify, abort
 
-from db import init_db, fetch_companies, fetch_company, insert_company
+from db import (
+    fetch_companies,
+    fetch_company,
+    fetch_outdated_companies,
+    init_db,
+    insert_company,
+    update_company,
+)
 from iai_logic import evaluate_company, slugify
+
+
+APP_REVISION = "2024.10-methodology-refresh"
 
 
 METHODOLOGY_OVERVIEW = [
@@ -98,7 +107,8 @@ app = Flask(__name__)
 
 @app.before_first_request
 def setup():
-    init_db()
+    init_db(APP_REVISION)
+    _reevaluate_if_revision_changed()
 
 
 @app.route("/")
@@ -139,6 +149,21 @@ def analyze():
     slug = slugify(name)
     existing = fetch_company(slug)
     if existing:
+        if (existing.get("revision") or "") != APP_REVISION:
+            try:
+                analysis = evaluate_company(existing["name"])
+            except Exception as exc:  # простая обработка ошибок для MVP
+                return (
+                    jsonify({"status": "error", "message": str(exc), "slug": slug}),
+                    500,
+                )
+            update_company(
+                slug,
+                analysis.get("company_name", name),
+                analysis.get("iai", 0),
+                analysis,
+                APP_REVISION,
+            )
         return jsonify({"status": "exists", "slug": slug})
 
     try:
@@ -146,13 +171,37 @@ def analyze():
     except Exception as exc:  # простая обработка ошибок для MVP
         return jsonify({"status": "error", "message": str(exc)}), 500
 
-    insert_company(slug, analysis.get("company_name", name), analysis.get("iai", 0), analysis)
+    insert_company(
+        slug,
+        analysis.get("company_name", name),
+        analysis.get("iai", 0),
+        analysis,
+        APP_REVISION,
+    )
     return jsonify({"status": "created", "slug": slug})
 
 
 @app.errorhandler(404)
 def not_found(_):
     return render_template("404.html"), 404
+
+
+def _reevaluate_if_revision_changed():
+    stale = list(fetch_outdated_companies(APP_REVISION))
+    if not stale:
+        return
+    for row in stale:
+        try:
+            analysis = evaluate_company(row["name"])
+        except Exception:
+            continue
+        update_company(
+            row["slug"],
+            analysis.get("company_name", row["name"]),
+            analysis.get("iai", 0),
+            analysis,
+            APP_REVISION,
+        )
 
 
 if __name__ == "__main__":

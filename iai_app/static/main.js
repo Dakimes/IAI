@@ -2,32 +2,40 @@ document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('searchForm');
   const input = document.getElementById('companyInput');
   const modal = document.getElementById('pipelineModal');
-  let stepTimer;
+  const steps = modal ? Array.from(modal.querySelectorAll('.step')) : [];
 
   if (form) {
     form.addEventListener('submit', (e) => {
       e.preventDefault();
       const name = (input?.value || '').trim();
       if (!name) return;
+      resetPipeline();
       showModal();
-      runSteps();
       fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name })
       })
-        .then(res => res.json().then(data => ({ status: res.status, body: data })))
+        .then(res => safeParseResponse(res))
         .then(({ status, body }) => {
-          clearInterval(stepTimer);
+          setStepState('search', 'done');
+          setStepState('scoring', 'active');
+          setPipelineHint(body.status === 'exists' ? 'Карточка уже готова, открываем...' : 'Расчёт индекса завершён, формируем карточку');
+          setTimeout(() => setStepState('scoring', 'done'), 150);
+          setTimeout(() => setStepState('aggregation', 'done'), 300);
+          setTimeout(() => setStepState('card', 'done'), 450);
           if (status === 200 && (body.status === 'exists' || body.status === 'created')) {
             window.location = `/company/${body.slug}`;
           } else {
+            setStepState('aggregation', 'error');
+            setPipelineHint(body.message || 'Не удалось завершить расчёт');
             hideModal();
             alert(body.message || 'Ошибка анализа');
           }
         })
         .catch(() => {
-          clearInterval(stepTimer);
+          setStepState('search', 'error');
+          setPipelineHint('Ошибка сети или сервера');
           hideModal();
           alert('Ошибка сети или сервера');
         });
@@ -37,15 +45,40 @@ document.addEventListener('DOMContentLoaded', () => {
   function showModal() { modal?.classList.remove('hidden'); }
   function hideModal() { modal?.classList.add('hidden'); }
 
-  function runSteps() {
-    if (!modal) return;
-    const nodes = Array.from(modal.querySelectorAll('.step'));
-    let idx = 0;
-    nodes.forEach((n, i) => n.classList.toggle('active', i === 0));
-    stepTimer = setInterval(() => {
-      nodes.forEach((n, i) => n.classList.toggle('active', i === idx % nodes.length));
-      idx += 1;
-    }, 1600);
+  function resetPipeline() {
+    if (!steps.length) return;
+    steps.forEach((node, idx) => {
+      const key = node.dataset.step;
+      const state = idx === 0 ? 'active' : 'pending';
+      setStepState(key, state);
+    });
+    setPipelineHint('Ищем источники и факты через web-search...');
+  }
+
+  function setStepState(key, state) {
+    const node = steps.find(n => n.dataset.step === key);
+    if (!node) return;
+    node.dataset.state = state;
+  }
+
+  function setPipelineHint(text) {
+    const hint = modal?.querySelector('.pipeline-status');
+    if (hint) hint.textContent = text;
+  }
+
+  async function safeParseResponse(res) {
+    const raw = await res.text();
+    let body = {};
+    try {
+      body = raw ? JSON.parse(raw) : {};
+    } catch (err) {
+      console.error('Не удалось распарсить ответ', err, raw);
+    }
+    return { status: res.status, body, raw };
+  }
+
+  if (modal) {
+    resetPipeline();
   }
 
   renderRadar();
