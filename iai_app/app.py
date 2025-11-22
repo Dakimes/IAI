@@ -8,9 +8,9 @@ from iai_logic import evaluate_company, slugify
 app = Flask(__name__)
 
 
-@app.before_first_request
-def setup():
-    init_db()
+# Инициализация БД при старте приложения
+init_db()
+
 
 
 @app.route("/")

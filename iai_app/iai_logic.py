@@ -1,4 +1,5 @@
 import json
+import os
 import re
 from typing import Dict, Any
 
@@ -13,8 +14,8 @@ WEIGHTS_IAI = {
     "PI": 0.05,
 }
 
-
-client = OpenAI()
+# Явно берём ключ из переменной окружения
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
 def slugify(name: str) -> str:
