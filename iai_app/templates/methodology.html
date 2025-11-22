@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="hero hero-compact">
+  <div>
+    <p class="eyebrow">Методология IAI</p>
+    <h1>Прозрачная оценка по шести субиндексам</h1>
+    <p class="lede">Каждый балл должен быть обоснован проверяемыми фактами и ссылками. Веса, шкалы 0–10 и ключевые метрики зашиты в промт и применяются строго без выдумок.</p>
+  </div>
+</section>
+
+<section class="panel method-grid">
+  {% for item in methodology %}
+    <article class="method-tile">
+      <header>
+        <div class="code">{{ item.code }}</div>
+        <div>
+          <h2>{{ item.name_ru }}</h2>
+          <p class="sub">{{ item.name_en }}</p>
+        </div>
+        <span class="pill">Вес {{ item.weight }}</span>
+      </header>
+      <p class="summary">{{ item.summary }}</p>
+      <ul>
+        {% for metric in item.metrics %}
+          <li>{{ metric }}</li>
+        {% endfor %}
+      </ul>
+      <p class="links">Опоры: {{ item.links|join('; ') }}</p>
+    </article>
+  {% endfor %}
+</section>
+{% endblock %}

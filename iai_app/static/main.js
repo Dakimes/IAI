@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (form) {
     form.addEventListener('submit', (e) => {
       e.preventDefault();
-      const name = input.value.trim();
+      const name = (input?.value || '').trim();
       if (!name) return;
       showModal();
       runSteps();
@@ -34,95 +34,88 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  function showModal() {
-    if (modal) modal.classList.remove('hidden');
-  }
-  function hideModal() {
-    if (modal) modal.classList.add('hidden');
-  }
+  function showModal() { modal?.classList.remove('hidden'); }
+  function hideModal() { modal?.classList.add('hidden'); }
+
   function runSteps() {
     if (!modal) return;
-    const steps = Array.from(modal.querySelectorAll('.pipeline-steps li'));
+    const nodes = Array.from(modal.querySelectorAll('.node'));
     let idx = 0;
+    nodes.forEach((n, i) => n.classList.toggle('active', i === 0));
     stepTimer = setInterval(() => {
-      steps.forEach((el, i) => el.classList.toggle('active', i === idx % steps.length));
+      nodes.forEach((n, i) => n.classList.toggle('active', i === idx % nodes.length));
       idx += 1;
-    }, 3000);
+    }, 1600);
   }
 
-  initRadar();
-  decorateCards();
+  renderRadar();
+  decorateFactCards();
 });
 
-function initRadar() {
-  const container = document.getElementById('radarContainer');
+function renderRadar() {
   const svg = document.getElementById('radar');
-  if (!container || !svg) return;
-
+  if (!svg) return;
   const axes = ['FSI', 'MPI', 'PTI', 'TMI', 'RRI', 'PI'];
-  const values = axes.map(key => parseFloat(container.dataset[key.toLowerCase()]) || 0);
-  const size = 320;
-  const center = size / 2;
-  const radius = 120;
-
-  const rings = 5;
+  const values = axes.map(key => parseFloat(svg.dataset[key.toLowerCase()]) || 0);
   const ns = 'http://www.w3.org/2000/svg';
   svg.innerHTML = '';
+  const size = 300;
+  const center = size / 2;
+  const radius = 110;
+  const rings = 5;
 
-  for (let i = 1; i <= rings; i++) {
-    const r = (radius / rings) * i;
-    const circle = document.createElementNS(ns, 'circle');
-    circle.setAttribute('cx', center);
-    circle.setAttribute('cy', center);
-    circle.setAttribute('r', r);
-    circle.setAttribute('fill', 'none');
-    circle.setAttribute('stroke', '#e5e7eb');
-    svg.appendChild(circle);
+  for (let k = 2; k <= 10; k += 2) {
+    const ring = document.createElementNS(ns, 'polygon');
+    const r = radius * (k / 10);
+    ring.setAttribute('fill', 'none');
+    ring.setAttribute('stroke', '#e5e7eb');
+    ring.setAttribute('stroke-width', '1');
+    ring.setAttribute('points', axes.map((_, i) => {
+      const a = -Math.PI / 2 + i * 2 * Math.PI / axes.length;
+      return `${center + r * Math.cos(a)},${center + r * Math.sin(a)}`;
+    }).join(' '));
+    svg.appendChild(ring);
   }
 
-  const points = [];
-  axes.forEach((axis, i) => {
-    const angle = (Math.PI * 2 / axes.length) * i - Math.PI / 2;
+  axes.forEach((lab, i) => {
+    const a = -Math.PI / 2 + i * 2 * Math.PI / axes.length;
+    const x = center + radius * Math.cos(a);
+    const y = center + radius * Math.sin(a);
     const line = document.createElementNS(ns, 'line');
-    line.setAttribute('x1', center);
-    line.setAttribute('y1', center);
-    line.setAttribute('x2', center + radius * Math.cos(angle));
-    line.setAttribute('y2', center + radius * Math.sin(angle));
-    line.setAttribute('stroke', '#cbd5e1');
+    line.setAttribute('x1', center); line.setAttribute('y1', center);
+    line.setAttribute('x2', x); line.setAttribute('y2', y);
+    line.setAttribute('stroke', '#e5e7eb');
     svg.appendChild(line);
 
-    const label = document.createElementNS(ns, 'text');
-    label.setAttribute('x', center + (radius + 18) * Math.cos(angle));
-    label.setAttribute('y', center + (radius + 18) * Math.sin(angle));
-    label.setAttribute('text-anchor', 'middle');
-    label.setAttribute('alignment-baseline', 'middle');
-    label.setAttribute('font-size', '12');
-    label.textContent = axis;
-    svg.appendChild(label);
-
-    const valueRadius = (values[i] / 10) * radius;
-    points.push([
-      center + valueRadius * Math.cos(angle),
-      center + valueRadius * Math.sin(angle)
-    ]);
+    const tx = document.createElementNS(ns, 'text');
+    tx.setAttribute('x', center + (radius + 14) * Math.cos(a));
+    tx.setAttribute('y', center + (radius + 14) * Math.sin(a));
+    tx.setAttribute('text-anchor', 'middle');
+    tx.setAttribute('dominant-baseline', 'middle');
+    tx.setAttribute('font-size', '10');
+    tx.setAttribute('fill', '#64748b');
+    tx.textContent = lab;
+    svg.appendChild(tx);
   });
 
   const polygon = document.createElementNS(ns, 'polygon');
-  polygon.setAttribute('points', points.map(p => p.join(',')).join(' '));
-  polygon.setAttribute('fill', 'rgba(31,111,235,0.35)');
-  polygon.setAttribute('stroke', '#1f6feb');
+  polygon.setAttribute('fill', '#0f172a22');
+  polygon.setAttribute('stroke', '#0f172a');
   polygon.setAttribute('stroke-width', '2');
+  polygon.setAttribute('points', values.map((val, i) => {
+    const a = -Math.PI / 2 + i * 2 * Math.PI / axes.length;
+    const rr = radius * (val / 10);
+    return `${center + rr * Math.cos(a)},${center + rr * Math.sin(a)}`;
+  }).join(' '));
   svg.appendChild(polygon);
 }
 
-function decorateCards() {
-  const cards = document.querySelectorAll('.card');
+function decorateFactCards() {
+  const cards = document.querySelectorAll('.fact-card');
   cards.forEach(card => {
-    const score = parseFloat(card.dataset.score) || 0;
     const badge = card.querySelector('.badge');
-    const progress = card.querySelector('.progress span');
-    badge.textContent = labelForScore(score);
-    progress.style.width = `${Math.min(Math.max(score * 10, 0), 100)}%`;
+    const score = parseFloat(card.dataset.score) || 0;
+    if (badge) badge.textContent = labelForScore(score);
   });
 }
 

@@ -1,16 +1,21 @@
 {% extends 'base.html' %}
 {% block content %}
-<section class="hero">
-  <h1>Оцените компанию по индексу IAI</h1>
-  <p>Введите название компании, чтобы запустить автоматический анализ и получить радар по шести субиндексам.</p>
+<section class="hero minimal">
+  <div>
+    <p class="eyebrow">IAI</p>
+    <h1>Оценка компании</h1>
+    <p class="lede">Введите название — мы соберём факты, посчитаем субиндексы и покажем итоговый IAI.</p>
+  </div>
   <form id="searchForm" class="search-form">
-    <input type="text" id="companyInput" placeholder="Введите название компании" required>
+    <input type="text" id="companyInput" placeholder="Например: ООО «ИРМ»" required>
     <button type="submit">Оценить</button>
   </form>
 </section>
 
-<section class="table-wrapper">
-  <h2>Рейтинг компаний</h2>
+<section class="panel rating-panel">
+  <header class="section-head">
+    <h2>Рейтинг</h2>
+  </header>
   <table class="rating-table">
     <thead>
       <tr><th>Компания</th><th>IAI</th></tr>
@@ -19,7 +24,7 @@
     {% for company in companies %}
       <tr>
         <td><a href="{{ url_for('company', slug=company['slug']) }}">{{ company['name'] }}</a></td>
-        <td>{{ '%.1f'|format(company['iai']) }}</td>
+        <td><span class="pill-score">{{ '%.1f'|format(company['iai']) }} / 10</span></td>
       </tr>
     {% else %}
       <tr><td colspan="2">Пока нет оценённых компаний.</td></tr>
@@ -28,16 +33,22 @@
   </table>
 </section>
 
-<div id="pipelineModal" class="modal hidden">
-  <div class="modal-content">
-    <h3>Оцениваем компанию…</h3>
-    <ul class="pipeline-steps">
-      <li class="active">Шаг 1/4 — Ищем публичную информацию…</li>
-      <li>Шаг 2/4 — Анализируем данные и субиндексы…</li>
-      <li>Шаг 3/4 — Считаем итоговый индекс IAI…</li>
-      <li>Шаг 4/4 — Сохраняем результат…</li>
-    </ul>
-    <p class="hint">Это может занять до 30 секунд. Окно закроется автоматически.</p>
+<div id="pipelineModal" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="modal-content pipeline">
+    <div class="spinner">
+      <div class="ring"></div>
+      <div class="center">IAI</div>
+    </div>
+    <div class="steps">
+      <p class="eyebrow">Пайплайн оценки</p>
+      <div class="road">
+        <div class="node active" data-text="Собираем факты (глубокий поиск)"></div>
+        <div class="node" data-text="Считаем субиндексы по методологии"></div>
+        <div class="node" data-text="Взвешиваем и строим радар"></div>
+        <div class="node" data-text="Сохраняем результат"></div>
+      </div>
+      <p class="hint">Пожалуйста, подождите — процесс занимает до 30 секунд.</p>
+    </div>
   </div>
 </div>
 {% endblock %}
