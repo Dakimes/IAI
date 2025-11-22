@@ -213,10 +213,11 @@ a:hover { text-decoration: underline; }
 .spinner .ring { position:absolute; inset:0; border-radius:50%; border:6px solid #dbeafe; border-top-color: #0f172a; animation: spin 1.4s linear infinite; }
 .spinner .center { font-weight:800; color: var(--accent); }
 .steps { flex:1; display:flex; flex-direction:column; gap:8px; }
-.road { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
-.node { position:relative; width:18px; height:18px; border-radius:50%; background:#e5e7eb; flex-shrink:0; }
-.node::after { content: attr(data-text); position:absolute; left:26px; top:-2px; white-space:nowrap; color: var(--text); font-size:13px; }
-.node.active { background:#0f172a; box-shadow: 0 0 0 6px rgba(15,23,42,0.12); }
+.step-list { list-style:none; margin:4px 0 0; padding:0; display:flex; flex-direction:column; gap:8px; }
+.step { background:#f8fafc; border:1px solid var(--line); border-radius:12px; padding:10px 12px; display:flex; align-items:center; gap:10px; color: var(--text); font-weight:600; }
+.step::before { content:""; width:10px; height:10px; border-radius:50%; background:#e5e7eb; border:2px solid #e5e7eb; }
+.step.active { border-color: #0f172a; box-shadow: 0 6px 20px rgba(15,23,42,0.12); }
+.step.active::before { background:#0f172a; border-color:#0f172a; }
 .hint { margin:0; color: var(--muted); font-size:13px; }
 
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -226,6 +227,4 @@ a:hover { text-decoration: underline; }
   .nav { display:none; }
   .page-hero { flex-direction: column; align-items: flex-start; }
   .modal-content.pipeline { flex-direction: column; align-items: flex-start; }
-  .road { flex-direction: column; align-items: flex-start; }
-  .node::after { position: relative; left: 0; margin-left: 6px; top: 0; }
 }

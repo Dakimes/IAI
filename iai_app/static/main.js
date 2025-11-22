@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function runSteps() {
     if (!modal) return;
-    const nodes = Array.from(modal.querySelectorAll('.node'));
+    const nodes = Array.from(modal.querySelectorAll('.step'));
     let idx = 0;
     nodes.forEach((n, i) => n.classList.toggle('active', i === 0));
     stepTimer = setInterval(() => {
