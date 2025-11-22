@@ -1,7 +1,7 @@
 import json
 import os
 import re
-from typing import Dict, Any
+from typing import Any, Dict, List
 
 from openai import OpenAI
 
@@ -44,38 +44,42 @@ def calculate_iai(subindices: Dict[str, Any]) -> float:
 
 
 def evaluate_company(company_name: str) -> Dict[str, Any]:
-    prompt = f"""
-    Ты — аналитик инвестиций. Оцени инвестиционную привлекательность компании "{company_name}" по методологии IAI (шесть субиндексов). Верни только валидный JSON без дополнительного текста. Структура:
+    research = _run_subindex_research(company_name)
+    research_subindices = research.get("subindices", {})
+    research_tags = research.get("tags", [])
+
+    aggregation = _run_final_aggregation(company_name, research_subindices, research_tags)
+
+    subindices = aggregation.get("subindices") or research_subindices
+    cleaned_subindices = _sanitize_subindices(subindices)
+
+    iai_value = aggregation.get("iai") or calculate_iai(cleaned_subindices)
+
+    return {
+        "company_name": aggregation.get("company_name") or research.get("company_name") or company_name,
+        "tags": aggregation.get("tags") or research_tags,
+        "subindices": cleaned_subindices,
+        "iai": round(float(iai_value), 1),
+    }
+
+
+def _run_subindex_research(company_name: str) -> Dict[str, Any]:
+    methodology_prompt = f"""
+    Проведи глубокое исследование компании "{company_name}". Используй web-search для поиска фактических источников (официальные сайты, регуляторные реестры, СМИ, отчёты). Для каждого субиндекса IAI сформируй оценку 0–10 и минимум 2 факта с конкретными числами/метриками и рабочими URL-источниками. Структура ответа — только JSON:
     {{
       "company_name": "...",
       "tags": ["..."],
       "subindices": {{
-        "FSI": {{"score": <float 0-10>, "facts": [{{"title": "...", "description": "...", "sources": ["..."]}}]}},
-        "MPI": {{"score": <float 0-10>, "facts": [{{"title": "...", "description": "...", "sources": ["..."]}}]}},
-        "PTI": {{"score": <float 0-10>, "facts": [{{"title": "...", "description": "...", "sources": ["..."]}}]}},
-        "TMI": {{"score": <float 0-10>, "facts": [{{"title": "...", "description": "...", "sources": ["..."]}}]}},
-        "RRI": {{"score": <float 0-10>, "facts": [{{"title": "...", "description": "...", "sources": ["..."]}}]}},
-        "PI":  {{"score": <float 0-10>, "facts": [{{"title": "...", "description": "...", "sources": ["..."]}}]}}
+        "FSI": {{"score": <float>, "facts": [{{"title": "...", "description": "...", "sources": ["https://..."]}}]}},
+        "MPI": {{"score": <float>, "facts": [{{"title": "...", "description": "...", "sources": ["https://..."]}}]}},
+        "PTI": {{"score": <float>, "facts": [{{"title": "...", "description": "...", "sources": ["https://..."]}}]}},
+        "TMI": {{"score": <float>, "facts": [{{"title": "...", "description": "...", "sources": ["https://..."]}}]}},
+        "RRI": {{"score": <float>, "facts": [{{"title": "...", "description": "...", "sources": ["https://..."]}}]}},
+        "PI":  {{"score": <float>, "facts": [{{"title": "...", "description": "...", "sources": ["https://..."]}}]}}
       }}
     }}
 
-    Методология и веса: FSI 30%, MPI 25%, PTI 20%, TMI 15%, RRI 10%, PI 5%.
-    Коды и смысл: FSI = Financial Strength & Integrity (рентабельность, долговая нагрузка, OpCF), MPI = Market Potential & Intensity (CAGR, гео и каналы, конкуренция), PTI = Product & Technology Intensity (TRL, IP, R&D), TMI = Team & Management Integrity (лидеры, совет, ESOP, аудит, CG), RRI = Risk & Resilience Index (локализация, IP-риски, санкции, зависимость от B2G, компонентные риски), PI = Plan & Implementation (MAPE/WAPE, hit-ratio KPI, консистентность с CAGR).
-    Считай score по бэндам 0–10 (можно дробные). Используй диапазоны:
-    - Рост выручки YoY (%): <0→2; 0–10→3; 10–25→5; 25–50→7; 50–100→8; 100–200→9; >200→10 (↑ лучше).
-    - Net margin (%): <0→1; 0–5→3; 5–10→5; 10–20→7; 20–30→8; 30–40→9; >40→10 (↑).
-    - Net Debt/EBITDA: >5→1; 4–5→3; 3–4→5; 2–3→7; 1–2→8; 0–1→9; net cash→10 (↓ лучше).
-    - Interest coverage (EBIT/Interest): <1.5→1; 1.5–2.5→3; 2.5–4→5; 4–6→7; 6–10→8; 10–15→9; >15→10 (↑).
-    - CCC (дни): >90→2; 60–90→4; 30–60→6; 10–30→8; 0–10→9; <0→10 (↓ лучше). Формула: CCC = DIO + DSO − DPO.
-    - CAGR рынка (%): <5→3; 5–10→5; 10–15→7; 15–20→8; 20–30→9; >30→10 (↑).
-    - HHI рынка: >2500→3; 1800–2500→5; 1500–1800→7; <1500→9–10 (↓ лучше). NPS: (NPS+100)/20 → 0–10.
-    - Длина цикла сделки (дни): >180→3; 90–180→5; 45–90→7; <45→9–10 (↓).
-    - PTI: TRL 1≈1 … TRL9≈10 (линейно); IP-горизонт <1г→2; 1–3→4; 3–5→6; 5–10→8; >10→10; R&D/Revenue <3→3; 3–6→5; 6–10→7; 10–20→8; >20→9–10.
-    - TMI: Leadership track (низк/средн/сильн → ~3/6/9), наличие совета/независимых/ESOP/аудита повышает балл; применяй G20/OECD CG.
-    - RRI: Доля B2G >70%→3; 40–70→5; 20–40→7; <20→9. Учитывай локализацию (ПП-719/СТ-1), IP-риски, судебные/санкционные кейсы, компонентные зависимости.
-    - PI: MAPE/WAPE >30→3; 20–30→5; 10–20→7; 5–10→8–9; <5→10. Hit-ratio KPI ≤60→4; 60–80→6; 80–95→8–9; >95→10.
-
-    Требования к facts: минимум 2 факта на каждый субиндекс. Каждый факт = конкретная метрика с числом/диапазоном + краткое объяснение и 1–3 источника URL. Только реальные ссылки (официальные сайты, реестры, СМИ). Проверяй факты и опирайся на строгую методологию; никаких выдумок или placeholder-ссылок. Если данных нет — ставь score 0 и факт "нет данных". Можно использовать широкое веб-исследование (deep research) для нахождения подтверждений.
+    Методология и веса: FSI 30%, MPI 25%, PTI 20%, TMI 15%, RRI 10%, PI 5%. Применяй бэнды из методологии (рост выручки, маржа, Net Debt/EBITDA, NPS, TRL, локализация, точность прогнозов и др.) и выводи дробные баллы, если необходимо. Если данных нет — ставь score 0 и факт "нет данных" без выдуманных ссылок. Сохраняй только реальные ссылки, найденные через поиск.
     """
 
     response = client.chat.completions.create(
@@ -83,20 +87,76 @@ def evaluate_company(company_name: str) -> Dict[str, Any]:
         messages=[
             {
                 "role": "system",
-                "content": "Ты помогаешь инвестору оценивать стартапы и компании по шести метрикам: FSI, MPI, PTI, TMI, RRI, PI. Возвращай только JSON указанной структуры.",
+                "content": "Ты инвестиционный аналитик. Всегда проверяешь данные через web-search и возвращаешь только правдоподобные факты и рабочие URL. Формат ответа — строгий JSON без пояснений.",
             },
-            {"role": "user", "content": prompt},
+            {"role": "user", "content": methodology_prompt},
         ],
-        temperature=0.4,
-        max_tokens=1200,
+        temperature=0.3,
+        max_tokens=1400,
     )
 
     content = response.choices[0].message.content
     if not content:
-        raise ValueError("Пустой ответ от модели")
+        raise ValueError("Пустой ответ от модели (этап исследования)")
 
-    data = json.loads(content)
-    subindices = data.get("subindices", {})
-    iai_value = calculate_iai(subindices)
-    data["iai"] = iai_value
-    return data
+    return json.loads(content)
+
+
+def _run_final_aggregation(company_name: str, subindices: Dict[str, Any], tags: List[str]) -> Dict[str, Any]:
+    aggregation_prompt = """
+    На основе уже собранных фактов и оценок рассчитай итоговый индекс IAI. Используй только предоставленные факты и источники, не придумывай новые данные. Применяй веса: FSI 30%, MPI 25%, PTI 20%, TMI 15%, RRI 10%, PI 5%.
+
+    Верни JSON:
+    {
+      "company_name": "...",
+      "tags": [...],
+      "subindices": { same structure как вход },
+      "iai": <float 0-10 с округлением до 0.1>
+    }
+
+    Оставь источники без изменений, сохрани по 2–3 ключевых факта на субиндекс и пересчитай score при необходимости по той же методологии.
+    """
+
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {
+                "role": "system",
+                "content": "Ты агрегируешь результаты 6 промптов и считаешь итоговый индекс по весовой модели IAI. Формат ответа — валидный JSON для UI, только на основе переданных данных.",
+            },
+            {"role": "user", "content": json.dumps({"company_name": company_name, "tags": tags, "subindices": subindices}, ensure_ascii=False)},
+            {"role": "user", "content": aggregation_prompt},
+        ],
+        temperature=0.2,
+        max_tokens=800,
+    )
+
+    content = response.choices[0].message.content
+    if not content:
+        raise ValueError("Пустой ответ от модели (агрегация)")
+
+    return json.loads(content)
+
+
+def _sanitize_subindices(subindices: Dict[str, Any]) -> Dict[str, Any]:
+    cleaned = {}
+    for key, block in subindices.items():
+        facts = []
+        for fact in block.get("facts", []):
+            sources = [src.strip() for src in fact.get("sources", []) if _is_http_url(src)]
+            facts.append(
+                {
+                    "title": fact.get("title", ""),
+                    "description": fact.get("description", ""),
+                    "sources": sources,
+                }
+            )
+        cleaned[key] = {
+            "score": block.get("score", 0),
+            "facts": facts,
+        }
+    return cleaned
+
+
+def _is_http_url(value: str) -> bool:
+    return isinstance(value, str) and value.strip().lower().startswith(("http://", "https://"))
