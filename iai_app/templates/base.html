@@ -8,12 +8,15 @@
 </head>
 <body>
   <header class="site-header">
-    <div class="container">
-      <a href="{{ url_for('index') }}" class="logo">IAI Dashboard</a>
-      <p class="tagline">Интегральный индекс инвестиционной привлекательности • 6 субиндексов</p>
+    <div class="wrap">
+      <a href="{{ url_for('index') }}" class="logo">IAI</a>
+      <nav class="nav">
+        <a href="{{ url_for('index') }}">Главная</a>
+        <a href="{{ url_for('methodology') }}">Методология</a>
+      </nav>
     </div>
   </header>
-  <main class="container">
+  <main class="wrap">
     {% block content %}{% endblock %}
   </main>
   <script src="{{ url_for('static', filename='main.js') }}"></script>

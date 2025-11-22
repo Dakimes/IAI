@@ -124,6 +124,11 @@ def company(slug):
     )
 
 
+@app.route("/methodology")
+def methodology():
+    return render_template("methodology.html", methodology=METHODOLOGY_OVERVIEW, title="Методология IAI")
+
+
 @app.route("/api/analyze", methods=["POST"])
 def analyze():
     data = request.get_json() or {}
