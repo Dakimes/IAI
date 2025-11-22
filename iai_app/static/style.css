@@ -97,6 +97,8 @@ a:hover { text-decoration: underline; }
   border-radius: 12px;
   font-weight: 700;
   cursor: pointer;
+  font-weight: 700;
+  box-shadow: 0 10px 30px rgba(27, 79, 255, 0.25);
 }
 .search-form button:hover { background: #0b1224; }
 

@@ -10,6 +10,12 @@
         <span class="tag muted">теги не указаны</span>
       {% endfor %}
     </div>
+    <div class="iai-badge">IAI {{ '%.1f'|format(iai) }} / 10</div>
+  </div>
+  <div class="meta-grid">
+    <div class="meta-chip">Весовая модель: 30 / 25 / 20 / 15 / 10 / 5</div>
+    <div class="meta-chip">Факты + ссылки</div>
+    <div class="meta-chip">Шкала 0–10 (бэнды и перцентили)</div>
   </div>
   <div class="iai-chip">IAI {{ '%.1f'|format(iai) }} / 10</div>
 </header>
@@ -62,6 +68,27 @@
           {% endfor %}
         </ul>
       </article>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="panel">
+  <div class="company-header" style="align-items:center;">
+    <h2 style="margin:0">Методология IAI (внутри prompt)</h2>
+    <span class="highlight">Ставим факты на рельсы: веса, метрики, источники</span>
+  </div>
+  <div class="methodology">
+    {% for item in methodology %}
+      <div class="method-card">
+        <h4>{{ item.code }} — {{ item.name_en }}</h4>
+        <p class="meta">{{ item.name_ru }} • {{ item.summary }} • <span class="weight">Вес: {{ item.weight }}</span></p>
+        <ul>
+          {% for metric in item.metrics %}
+            <li>{{ metric }}</li>
+          {% endfor %}
+        </ul>
+        <p class="muted">Опоры: {{ item.links|join('; ') }}</p>
+      </div>
     {% endfor %}
   </div>
 </section>
