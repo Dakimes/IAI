@@ -96,9 +96,9 @@ METHODOLOGY_OVERVIEW = [
 app = Flask(__name__)
 
 
-# Инициализация БД при старте приложения
-init_db()
-
+@app.before_first_request
+def setup():
+    init_db()
 
 
 @app.route("/")
